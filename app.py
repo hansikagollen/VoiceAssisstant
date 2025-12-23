@@ -1,36 +1,34 @@
-from voice.tts import speak_telugu
-from agent.memory import memory
-from agent.planner import plan
-from agent.executor import execute
-from agent.evaluator import evaluate
+import streamlit as st
+import speech_recognition as sr
+from voice import speak_telugu
 
-def main():
-    speak_telugu("ప్రభుత్వ పథకాల సహాయకునికి స్వాగతం")
+st.set_page_config(page_title="Telugu Scheme Assistant")
 
-    while True:
-        action = plan(memory)
+st.title("🏛️ Telugu Voice-Based Government Scheme Agent")
 
-        if action == "ASK_AGE":
-            speak_telugu("మీ వయస్సు ఎంత?")
-            memory["age"] = int(input("Age: "))
+audio_bytes = st.audio_input("🎤 Tap and speak Telugu")
 
-        elif action == "ASK_INCOME":
-            speak_telugu("మీ ఆదాయం ఎంత?")
-            memory["income"] = int(input("Income: "))
+if audio_bytes is not None:
+    # 🔊 PLAY BACK WHAT USER SPOKE
+    st.audio(audio_bytes, format="audio/wav")
 
-        elif action == "ASK_CHILDREN":
-            speak_telugu("మీకు పిల్లలు ఉన్నారా?")
-            memory["children"] = input("yes/no: ") == "yes"
+    # Save audio to file
+    with open("input.wav", "wb") as f:
+        f.write(audio_bytes.getvalue())
 
-        elif action == "FIND_SCHEME":
-            result = execute(memory)
-            status = evaluate(result)
+    # Speech to text
+    r = sr.Recognizer()
+    with sr.AudioFile("input.wav") as source:
+        audio_data = r.record(source)
 
-            if status == "SUCCESS":
-                for s in result:
-                    speak_telugu(f"మీకు {s['name']} అర్హత ఉంది")
-            else:
-                speak_telugu("క్షమించండి, పథకం లేదు")
-            break
+    try:
+        text = r.recognize_google(audio_data, language="te-IN")
+        st.success(f"📝 You said: {text}")
 
-main()
+        reply = f"మీ సమాచారం అందింది: {text}"
+        st.info(reply)
+
+        speak_telugu(reply)
+
+    except sr.UnknownValueError:
+        st.error("❌ Telugu speech not recognized. Please try again.")

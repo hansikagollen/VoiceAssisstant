@@ -1,6 +1,7 @@
-openai
-whisper
-torch
-gtts
+streamlit
+langchain
+langgraph
+speechrecognition
 pyaudio
-numpy
+gtts
+pandas
